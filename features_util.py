@@ -4,12 +4,33 @@ import yfinance as yf
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
-def compute_features(stock_series, market_series, N):
-    features = pd.DataFrame(columns = ['Min', 'Max', 'Mean', 'Std', 'Skewness', 'Kurtosis', 'Chi-Square', 'p', 'Beta'])
+features = ['Min', #minimum value of the stock price in the last N days
+    'Max', #maximum value of the stock price in the last N days
+    'Mean', #mean value of the stock price in the last N days
+    'Std', #standard deviation of the stock price in the last N days
+    'Skewness', #skewness of the stock price in the last N days, a measure of the asymmetry of the 
+                #probability distribution of a real-valued random variable about its mean,
+                #negative avlues indicating these stocks are downward most of the time and experience negative returns
+    'Kurtosis', #kurtosis of the stock price in the last N days, a measure of the "tailedness" of the probability,
+                #shows the degree of presence of outliers in the underlying distribution
+    'Chi-Square', #chi-square test of the stock price in the last N days, a measure of the skewness and kurtosis,
+                  #the large values of Chi-Square confrm that the null hypothesis for all series to be normally 
+                  #distributed is rejected
+    'Beta', #beta of the stock price in the last N days, a measure of the volatility of the stock relative to the market
+           #beta = 1 means the stock is as volatile as the market, beta > 1 means the stock is more volatile than the market
+    'Mean_Volume' #volume of the stock in the last N days
+    ]
 
-    for i in range(N, len(stock_series)):
-        history_data = stock_series[i-N:i]
-        chi, p = stats.jarque_bera(history_data)
+def get_available_features():
+    return features
+
+def compute_features(stock_symbol, stock_series, market_series, observe_prev_N_days):
+    volumes = yf.download(stock_symbol, stock_series.index[0], stock_series.index[-1])['Volume']
+    features_df = pd.DataFrame(columns = features)
+
+    for i in range(observe_prev_N_days, len(stock_series)):
+        history_data = stock_series[i-observe_prev_N_days:i]
+        chi, _p = stats.jarque_bera(history_data)
         new_row = {
             'Min': min(history_data),
             'Max': max(history_data),
@@ -18,13 +39,13 @@ def compute_features(stock_series, market_series, N):
             'Skewness': history_data.skew(), 
             'Kurtosis': history_data.kurtosis(), 
             'Chi-Square': chi, 
-            'p': p, 
-            'Beta': calculate_beta(history_data, market_series[i-N:i])
+            'Beta': calculate_beta(history_data, market_series[i-observe_prev_N_days:i]),
+            'Mean_Volume': volumes[i-observe_prev_N_days:i].mean()
         }
-        features = features.append(new_row, ignore_index=True)
+        features_df = features_df.append(new_row, ignore_index=True)
 
-    features = features.set_index(stock_series[N:].index)
-    return features
+    features_df = features_df.set_index(stock_series[observe_prev_N_days:].index)
+    return features_df
 
 def calculate_beta(stock_series, market_series):
     data = pd.DataFrame({'stock': stock_series, 'market': market_series})
