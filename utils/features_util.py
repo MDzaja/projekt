@@ -25,7 +25,7 @@ def get_available_features():
     return features
 
 def compute_features(stock_symbol, stock_series, market_series, observe_prev_N_days):
-    volumes = yf.download(stock_symbol, stock_series.index[0], stock_series.index[-1])['Volume']
+    volumes = yf.download(stock_symbol, stock_series.index[0], stock_series.index[-1], progress=False)['Volume']
     features_df = pd.DataFrame(columns = features)
 
     for i in range(observe_prev_N_days, len(stock_series)):

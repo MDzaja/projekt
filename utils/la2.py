@@ -1,3 +1,5 @@
+import numpy as np
+
 #2-state labeling algorithm
 def get_series_labels(series, tau=0.15):
     first_price = series[0]
@@ -52,5 +54,6 @@ def get_series_labels(series, tau=0.15):
         last_peak = low_peak_t
     for i in range(last_peak+1, len(series)):
         labels[i] = trend
-        
-    return labels
+    labels[0] = labels[1]
+    
+    return np.array(labels)
