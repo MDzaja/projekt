@@ -24,12 +24,12 @@ features = ['Min', #minimum value of the stock price in the last N days
 def get_available_features():
     return features
 
-def compute_features(stock_symbol, stock_series, market_series, observe_prev_N_days):
+def compute_features(stock_symbol, stock_series, market_series, window_size):
     volumes = yf.download(stock_symbol, stock_series.index[0], stock_series.index[-1], progress=False)['Volume']
     features_df = pd.DataFrame(columns = features)
 
-    for i in range(observe_prev_N_days, len(stock_series)):
-        history_data = stock_series[i-observe_prev_N_days:i]
+    for i in range(window_size, len(stock_series)):
+        history_data = stock_series[i-window_size:i]
         chi, _p = stats.jarque_bera(history_data)
         new_row = {
             'Min': min(history_data),
@@ -39,12 +39,12 @@ def compute_features(stock_symbol, stock_series, market_series, observe_prev_N_d
             'Skewness': history_data.skew(), 
             'Kurtosis': history_data.kurtosis(), 
             'Chi-Square': chi, 
-            'Beta': calculate_beta(history_data, market_series[i-observe_prev_N_days:i]),
-            'Mean_Volume': volumes[i-observe_prev_N_days:i].mean()
+            'Beta': calculate_beta(history_data, market_series[i-window_size:i]),
+            'Mean_Volume': volumes[i-window_size:i].mean()
         }
         features_df = features_df.append(new_row, ignore_index=True)
 
-    features_df = features_df.set_index(stock_series[observe_prev_N_days:].index)
+    features_df = features_df.set_index(stock_series[window_size:].index)
     return features_df
 
 def calculate_beta(stock_series, market_series):
