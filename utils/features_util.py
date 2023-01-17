@@ -21,10 +21,10 @@ features = ['Min', #minimum value of the stock price in the last N days
     'Mean_Volume' #volume of the stock in the last N days
     ]
 
-def get_available_features():
+def get_available_features() -> list:
     return features
 
-def compute_features(stock_symbol, stock_series, market_series, window_size):
+def compute_features(stock_symbol: str, stock_series: pd.Series, market_series: pd.Series, window_size: int) -> pd.DataFrame:
     volumes = yf.download(stock_symbol, stock_series.index[0], stock_series.index[-1], progress=False)['Volume']
     features_df = pd.DataFrame(columns = features)
 
@@ -47,7 +47,7 @@ def compute_features(stock_symbol, stock_series, market_series, window_size):
     features_df = features_df.set_index(stock_series[window_size:].index)
     return features_df
 
-def calculate_beta(stock_series, market_series):
+def calculate_beta(stock_series: pd.Series, market_series: pd.Series) -> float:
     data = pd.DataFrame({'stock': stock_series, 'market': market_series})
     # Convert historical stock prices to daily percent change
     price_change = data.pct_change()

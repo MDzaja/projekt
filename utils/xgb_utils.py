@@ -1,9 +1,12 @@
 import xgboost as xgb
 from sklearn.model_selection import GridSearchCV
 import json
+import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score, mean_squared_error
 
-def grid_search_cv_acc(features_train, labels_train, cv_inidces_list, param_grid=None, sw_train=None, scale_pos_weight=None, saving_file=None):
+def grid_search_cv_acc(features_train: pd.DataFrame, labels_train: pd.Series, cv_inidces_list: list, 
+            param_grid: dict=None, sw_train: pd.Series=None, scale_pos_weight: float=None, saving_file: str=None) -> dict:
+    
     if param_grid == None:
         param_grid = {
                 'max_depth': [3, 6, 9],
@@ -38,7 +41,10 @@ def grid_search_cv_acc(features_train, labels_train, cv_inidces_list, param_grid
 
     return clf.best_params_
 
-def test_model(features_train, features_test, labels_train, labels_test, model_file_path, sw_train=None, sw_test=None):
+def test_model(X_train: pd.DataFrame, X_test: pd.DataFrame, Y_train: pd.Series,
+               Y_test: pd.Series, model_file_path: str, refit_frequency: int=5, sw_train: pd.Series=None, 
+               sw_test: pd.Series=None) -> dict:
+    
     with open(model_file_path, 'r') as fp:
         model_params = json.load(fp)
     xgb_model = xgb.XGBClassifier(**model_params)
@@ -46,18 +52,30 @@ def test_model(features_train, features_test, labels_train, labels_test, model_f
     fit_params ={}
     if sw_train is not None:
         fit_params['sample_weight'] = sw_train
-    xgb_model.fit(features_train, labels_train, **fit_params)
+    xgb_model.fit(X_train, Y_train, **fit_params)
 
     test_params ={}
     if sw_test is not None:
         test_params['sample_weight'] = sw_test
+        
+    counter = 0
+    predictions = []
+    for i in range(len(X_test)):
+        counter += 1
+        if counter == refit_frequency:
+            xgb_model.fit(X_train, Y_train)
+            counter = 0
+            
+        prediction = xgb_model.predict(X_test.iloc[[i]])[0]
+        predictions.append(prediction)
+        X_train.append(X_test.iloc[i])
+        Y_train.append(Y_test[i:i+1])
     
-    predictions = xgb_model.predict(features_test)
     metrics = {
-        'accuracy': accuracy_score(labels_test, predictions,**test_params),
-        'f1': f1_score(labels_test, predictions,**test_params),
-        'mse': mean_squared_error(labels_test, predictions,**test_params),
-        'auc': roc_auc_score(labels_test, predictions,**test_params)
+        'accuracy': accuracy_score(Y_test, predictions,**test_params),
+        'f1': f1_score(Y_test, predictions,**test_params),
+        'mse': mean_squared_error(Y_test, predictions,**test_params),
+        'auc': roc_auc_score(Y_test, predictions,**test_params)
     }
 
     return metrics

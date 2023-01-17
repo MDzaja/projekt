@@ -1,7 +1,7 @@
-import numpy as np
+import pandas as pd
 
 #2-state labeling algorithm
-def get_series_labels(series, tau=0.15):
+def get_series_labels(series: pd.Series, tau: float=0.15) -> pd.Series:
     first_price = series[0]
     high_peak_p = series[0]
     high_peak_t = 0
@@ -56,4 +56,6 @@ def get_series_labels(series, tau=0.15):
         labels[i] = trend
     labels[0] = labels[1]
     
-    return np.array(labels)
+    labels_series = pd.Series(labels, index=series.index)
+    
+    return labels_series

@@ -1,12 +1,12 @@
 #create a list of indices for cross validation, each element has 8 train folds and 2 test folds
 #after each test fold there is a skip period where no data is used
-def custom_ten_fold_cv_selection(data_size, observe_prev_N_days):
+def custom_ten_fold_cv_selection(data_size: int, window_size: int) -> list:
     unsortedCVindices = []
     sortedByTestCVindices = []
     uniqueCVindices = []
 
     fold_length = int(data_size/10)
-    half_observation_period = int(observe_prev_N_days/2)
+    half_observation_period = int(window_size/2)
     for i in range(0, 10):
         for j in range(i+1, 10):
             trainIndices = []
@@ -31,7 +31,7 @@ def custom_ten_fold_cv_selection(data_size, observe_prev_N_days):
 
                 trainIndices = []
                 testIndices = []
-                for k in range((i+1)*fold_length+observe_prev_N_days-half_observation_period, j*fold_length):
+                for k in range((i+1)*fold_length+window_size-half_observation_period, j*fold_length):
                     trainIndices.append(k)
                 for k in range(j*fold_length, end_index):
                     testIndices.append(k)
@@ -58,7 +58,7 @@ def custom_ten_fold_cv_selection(data_size, observe_prev_N_days):
     return uniqueCVindices
 
 #TODO - potentially modify for class number grater than 2
-def remove_monoton_instances(cv_indices, labels):
+def remove_monoton_instances(cv_indices: list, labels: list) -> list:
     finalCVindices = []
     for indices in cv_indices:
         counter = 0
@@ -74,10 +74,10 @@ def remove_monoton_instances(cv_indices, labels):
 
 #create a list of indices for cross validation, each element has 8 train folds and 2 test folds
 #after each test fold there is a skip period where no data is used
-def simple_ten_fold_cv_selection(data_size, observe_prev_N_days):
+def simple_ten_fold_cv_selection(data_size: int, window_size: int) -> list:
     customCVindices = []
     fold_length = int(data_size/10)
-    half_observation_period = int(observe_prev_N_days/2)
+    half_observation_period = int(window_size/2)
     for i in range(0, 10):
         for j in range(i+1, 10):
             trainIndices = []
@@ -87,9 +87,9 @@ def simple_ten_fold_cv_selection(data_size, observe_prev_N_days):
             if j == 9:
                 end_index = data_size
             for k in range(0, data_size):
-                if j-i != 1 and k >= (i+1)*fold_length-half_observation_period and k < (i+1)*fold_length+observe_prev_N_days-half_observation_period:
+                if j-i != 1 and k >= (i+1)*fold_length-half_observation_period and k < (i+1)*fold_length+window_size-half_observation_period:
                     continue
-                if j != 9 and k >= (j+1)*fold_length-half_observation_period and k < (j+1)*fold_length+observe_prev_N_days-half_observation_period:
+                if j != 9 and k >= (j+1)*fold_length-half_observation_period and k < (j+1)*fold_length+window_size-half_observation_period:
                     continue
                 if k >= i*fold_length and k < (i+1)*fold_length or k >= j*fold_length and k < end_index:
                     testIndices.append(k)

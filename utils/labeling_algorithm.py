@@ -1,5 +1,7 @@
+import pandas as pd
+
 #3-state labeling algorithm
-def get_series_labels(series, tau=0.05, w=11):
+def get_series_labels(series: pd.Series, tau: float=0.05, w: int=11) -> pd.Series:
     first_price = series[0]
     first_trend = None
 
@@ -32,9 +34,11 @@ def get_series_labels(series, tau=0.05, w=11):
             last_upt__t = t
         labels.append(trend)
 
-    return labels
+    labels_series = pd.Series(labels, index=series.index)
+    
+    return labels_series
 
-def upward_trend(last_upt_price, last_upt__time, price, time, tau, w):
+def upward_trend(last_upt_price: float, last_upt__time: int, price: float, time: int, tau: float, w: int) -> int:
     if price > last_upt_price:
         return 1
     elif time - last_upt__time > w:
@@ -43,7 +47,7 @@ def upward_trend(last_upt_price, last_upt__time, price, time, tau, w):
         return -1
     return None
 
-def no_action_trend(last_upt_price, last_upt__time, price, time, tau, w):
+def no_action_trend(last_upt_price: float, last_upt__time: int, price: float, time: int, tau: float, w: int) -> int:
     if price >= last_upt_price + tau*last_upt_price:
         return 1
     elif price <= last_upt_price - tau*last_upt_price:
@@ -52,7 +56,7 @@ def no_action_trend(last_upt_price, last_upt__time, price, time, tau, w):
         return 0
     return None
 
-def downward_trend(last_upt_price, last_upt__time, price, time, tau, w):
+def downward_trend(last_upt_price: float, last_upt__time: int, price: float, time: int, tau: float, w: int) -> int:
     if price < last_upt_price:
         return -1
     elif time - last_upt__time > w:
