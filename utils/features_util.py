@@ -42,7 +42,8 @@ def compute_features(stock_symbol: str, stock_series: pd.Series, market_series: 
             'Beta': calculate_beta(history_data, market_series[i-window_size:i]),
             'Mean_Volume': volumes[i-window_size:i].mean()
         }
-        features_df = features_df.append(new_row, ignore_index=True)
+        new_row = pd.DataFrame([new_row])
+        features_df = pd.concat([features_df, new_row], ignore_index=True)
 
     features_df = features_df.set_index(stock_series[window_size:].index)
     return features_df
